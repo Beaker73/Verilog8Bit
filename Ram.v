@@ -1,11 +1,11 @@
 `ifndef RAM_H
 `define RAM_H
 
-module Ram(clk, reset, address, dataIn, dataOut);
+module Ram(clk, reset, writeEnabled, address, dataIn, dataOut);
   
   parameter Bits = 16; // default 16 bits, 64Kb
 
-  input clk, reset;
+  input clk, reset, writeEnabled;
   input [Bits-1:0] address;
   input [7:0] dataIn;
   output [7:0] dataOut;

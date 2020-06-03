@@ -1,8 +1,6 @@
 `ifndef SYNCGENERATOR_H
 `define SYNCGENERATOR_H
 
-`include "Ram.v"
-
 module SyncGenerator(clk, reset, hShift, vShift, hSync, vSync, xPos, yPos, isActive);
  
   // 4857480 Hz
