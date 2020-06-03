@@ -23,6 +23,15 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   );
   
   //
+  // VDP Registers
+  // r00    ---DBBBB    BBBB  Border RGB; D  Disabled
+  //
+  reg [7:0] regs[15:0];
+  always @(reset) begin
+    regs[0]  = 8'b00011100;
+  end
+  
+  //
   // Video RAM, 64Kb
   //
   wire [15:0] address;
@@ -33,7 +42,8 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   );
 
   assign address = { yPos[7:0], xPos[7:0] };
-  assign rgb = isActive ? data[3:0] : 4'b1100;
+  wire isEnabled = isActive && regs[0][4] == 1'b0;
+  assign rgb = isEnabled ? data[3:0] : regs[0][3:0];
 
 endmodule
 

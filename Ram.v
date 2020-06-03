@@ -12,6 +12,10 @@ module Ram(clk, reset, chipSelect, writeEnabled, address, data);
   // memory storage
   reg [7:0] memory [0:(1 << Bits)-1];
   
+  initial begin
+    //for (int i = 0; i <= (1 << Bits); i++)
+    //  memory[i] = i[7:0];
+  end
   
   always @(posedge clk) begin
     if(writeEnabled)
