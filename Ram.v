@@ -1,25 +1,24 @@
 `ifndef RAM_H
 `define RAM_H
 
-module Ram(clk, reset, writeEnabled, address, dataIn, dataOut);
+module Ram(clk, reset, chipSelect, writeEnabled, address, data);
   
   parameter Bits = 16; // default 16 bits, 64Kb
 
-  input clk, reset, writeEnabled;
+  input clk, reset, chipSelect, writeEnabled;
   input [Bits-1:0] address;
-  input [7:0] dataIn;
-  output [7:0] dataOut;
+  inout [7:0] data;
   
   // memory storage
   reg [7:0] memory [0:(1 << Bits)-1];
   
   
   always @(posedge clk) begin
-    if( writeEnabled)
-      memory[address] <= dataIn;
+    if(writeEnabled)
+      memory[address] <= data;
   end
   
-  assign dataOut = memory[address];
+  assign data = chipSelect && !writeEnabled ? memory[address] : {8{1'bz}};
 
 endmodule;
 

@@ -11,7 +11,7 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   output [3:0] rgb;
 
   //
-  // sync generator
+  // Sync Generator
   //
   wire [8:0]xPos, yPos;
   wire isActive;
@@ -25,15 +25,15 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   //
   // Video RAM, 64Kb
   //
-  wire vWriteEnabled = 0;
-  wire [15:0] vAddress = 0;
-  wire [7:0] vDataWrite = 0, vDataRead = 0;
+  wire [15:0] address;
+  wire [7:0] data = 8'bzzzzzzzz;
   Ram #(16) vram(
-    .clk(clk), .reset(reset), .writeEnabled(vWriteEnabled),
-    .address(vAddress), .dataIn(vDataWrite), .dataOut(vDataRead)
+    .clk(clk), .reset(reset), .chipSelect(isActive), .writeEnabled(0),
+    .address(address), .data(data)
   );
-  
-  assign rgb = isActive ? 4'b0100 : 4'b1100;
+
+  assign address = { yPos[7:0], xPos[7:0] };
+  assign rgb = isActive ? data[3:0] : 4'b1100;
 
 endmodule
 
