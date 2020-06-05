@@ -40,6 +40,12 @@ module Vdp(clk, reset, hSync, vSync, rgb);
     .clk(clk), .reset(reset), .chipSelect(isActive), .writeEnabled(0),
     .address(address), .data(data)
   );
+  
+  // 0000-2FFF - 32 columns, 24 rows = 0x300 chars
+  // we buffer a single row (32 chars) before the line starts
+  //if(xPos < (309-32)) begin
+  //  assign address = 
+  //end
 
   assign address = { yPos[7:0], xPos[7:0] };
   wire isEnabled = isActive && regs[0][4] == 1'b0;
