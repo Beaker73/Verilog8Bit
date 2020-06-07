@@ -1,0 +1,7 @@
+{
+  "name": "Beaker8",
+  "rules": [
+    {"fmt": "nop",  bits: ["00000000"]},
+    {"fmt:" "halt", bits: ["00000001"]},
+  ]
+}

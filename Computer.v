@@ -2,9 +2,11 @@
 `define COMPUTER_H
 
 `include "Cpu.v";
+`include "Rom.v"
 `include "Ram.v";
 `include "Vdp.v";
 `include "SyncGenerator.v";
+//iclude "Beaker8.json"
 
 module top(clk, reset, hsync, vsync, rgb);
 
