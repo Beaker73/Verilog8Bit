@@ -6,7 +6,8 @@
 `include "Ram.v";
 `include "Vdp.v";
 `include "SyncGenerator.v";
-//iclude "Beaker8.json"
+
+//`include "Beaker8.json"
 
 module top(clk, reset, hsync, vsync, rgb);
 
@@ -17,6 +18,12 @@ module top(clk, reset, hsync, vsync, rgb);
   // bus wires
   wire [15:0] address;
   reg [7:0] data;
+  
+  wire selectRom = address[15:14] == 2'b00;
+  Rom rom(
+    .clk(clk), .reset(reset), .chipSelect(selectRom),
+    .address(address[13:0]), .data(data)
+  );
 
   Cpu cpu(
     .clk(clk), .reset(reset),

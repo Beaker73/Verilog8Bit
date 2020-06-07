@@ -1,7 +1,10 @@
 {
   "name": "Beaker8",
+  "vars": {
+    "reg": { "bits": 1, "toks": ["sp","pc"]}
+  },
   "rules": [
-    {"fmt": "nop",  bits: ["00000000"]},
-    {"fmt:" "halt", bits: ["00000001"]},
+    { "fmt": "nop", "bits": ["00000000"]},
+    { "fmt": "halt", "bits": ["00000001"]}
   ]
 }
