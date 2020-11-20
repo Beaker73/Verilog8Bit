@@ -1,10 +1,48 @@
 {
-  "name": "Beaker8",
-  "vars": {
-    "reg": { "bits": 1, "toks": ["sp","pc"]}
-  },
-  "rules": [
-    { "fmt": "nop", "bits": ["00000000"]},
-    { "fmt": "halt", "bits": ["00000001"]}
-  ]
+	"name": "Beaker8",
+	"vars": {
+		"reg": { "bits": 1, "toks": ["sp","pc"] },
+		"c2": { "bits": 2 },
+		"c3": { "bits": 3 },
+		"abs8": { "bits": 8 },
+		"abs16": { "bits": 16 },
+		"rel8": { "bits": 8, "iprel": true, "ipofs": 1 },
+		"c": { "bits": 3, "toks": ["nz", "z", "nc", "c", "no", "o", "?", "true"]}
+	},
+	"rules": [
+		{ "fmt": "nop", 		"bits": ["00000000"] },
+		{ "fmt": "halt", 		"bits": ["00000001"] },
+		{ "fmt": "di", 			"bits": ["00000010"] },
+		{ "fmt": "ei", 			"bits": ["00000011"] },
+
+		{ "fmt": "ret", 		"bits": ["00011111"] },
+		{ "fmt": "ret.~c", 	 	"bits": ["00011", 0] },
+		{ "fmt": "jmp.r ~rel8",		"bits": ["00100111", 0] },
+		{ "fmt": "jmp.r.~c ~rel8",	"bits": ["00100", 0, 1] },
+		{ "fmt": "jmp ~abs16",		"bits": ["00101111", 0] },
+		{ "fmt": "jmp.~c ~abs16",	"bits": ["00101", 0, 1] },
+		{ "fmt": "jsr.r ~rel8",		"bits": ["00110111", 0] },
+		{ "fmt": "jsr.r.~c ~rel8",	"bits": ["00110", 0, 1] },
+		{ "fmt": "jsr ~abs16",		"bits": ["00111111", 0] },
+		{ "fmt": "jsr.~c ~abs16",	"bits": ["00111", 0, 1] },
+		
+		{ "fmt": "load.0", 		"bits": ["01000", "000"] },
+		{ "fmt": "load.1", 		"bits": ["01000", "001"] },
+		{ "fmt": "load.2", 		"bits": ["01000", "010"] },
+		{ "fmt": "load.4", 		"bits": ["01000", "011"] },
+		{ "fmt": "load", 		"bits": ["01000", "100"] },
+		{ "fmt": "load ~abs8", 		"bits": ["01000", "101", 0] },
+		{ "fmt": "load.a", 		"bits": ["01000", "110"] },
+		{ "fmt": "load.-1", 		"bits": ["01000", "111"] },
+		{ "fmt": "load.255", 		"bits": ["01000", "111"] },
+
+		{ "fmt": "store", 		"bits": ["01001", "110"] },
+
+		{ "fmt": "clone.~c3", 		"bits": ["01010", 0] },
+		{ "fmt": "update.~c3", 		"bits": ["01011", 0] },
+		{ "fmt": "drop.~c3", 		"bits": ["01100", 0] },
+		{ "fmt": "undrop.~c3", 		"bits": ["01101", 0] },
+		{ "fmt": "push.~c3", 		"bits": ["01110", 0] },
+		{ "fmt": "pop.~c3", 		"bits": ["01111", 0] }
+	]
 }
