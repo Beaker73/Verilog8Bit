@@ -3,7 +3,7 @@
 
 `include "Ram.v"
 `include "Vdp.v"
-`include "sync-generator.v";
+`include "SyncGenerator.v";
 
 module Vdp(clk, reset, hSync, vSync, rgb);
 
