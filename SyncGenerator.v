@@ -1,6 +1,8 @@
 `ifndef SYNCGENERATOR_H
 `define SYNCGENERATOR_H
 
+`include "Ram.v"
+
 module SyncGenerator(clk, reset, hShift, vShift, hSync, vSync, xPos, yPos, isActive);
  
   // 4857480 Hz
@@ -38,7 +40,7 @@ module SyncGenerator(clk, reset, hShift, vShift, hSync, vSync, xPos, yPos, isAct
   assign hSync = column > (309-23);
   
   // compute the pixel position based on configured shift and the borders
-  assign xPos = column - 8'd10 - { 5'b0, hShift };
+  assign xPos = column - 8'd9 - { 5'b0, hShift };
   assign yPos = line - 8'd26 - { 5'b0, vShift };
   
   // check if inside the pixel active region
