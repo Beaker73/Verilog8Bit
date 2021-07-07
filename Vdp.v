@@ -51,7 +51,7 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   reg [7:0] regs[8];
   
   always @(posedge reset) begin
-    regs[0] <= {4'b0000, 4'h2}; // 7-4: border colour 3-0: screen mode
+    regs[0] <= {4'b0000, 4'h3}; // 7-4: border colour 3-0: screen mode
     regs[1] <= 8'b0;
     regs[2] <= 8'b0;
     regs[3] <= 8'b0;
@@ -79,6 +79,7 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   	scrMode == 0 ? 0
      :	scrMode == 1 ? 2
      :  scrMode == 2 ? 7
+     :	scrMode == 3 ? 2
      :  0;
   
   SyncGenerator sync(
@@ -89,7 +90,7 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   );
   
   wire [3:0] color = backCol;
-  reg [7:0] pixel;
+  reg [7:0] pixel, trgb;
   reg [1:0] pal = 2'd0; // the active palette index
   
   always @(posedge clk) begin
@@ -169,10 +170,20 @@ module Vdp(clk, reset, hSync, vSync, rgb);
       end
     end
     
+    // screen mode 3, is a direct pixel map from memory onto screen
+    // every byte contains 1 rgb pixels (rrrgggbb)
+    // pixel map @ 0000-bfff (256x192) = 49152 bytes
+    else if( scrMode == 3 ) begin
+      if(active[0])
+        address <= { y[7:0], x[7:0]};
+      if(active[1])
+        trgb <= ramDataRead;
+    end
+    
   end
   
   assign color = x[0] == delay[0] ? pixel[7:4] : pixel[3:0];
-  assign rgb = { active[delay] ? palette[pal][color] : palette[0][backCol] };
+  assign rgb = { active[delay] ? ( scrMode == 3 ? trgb : palette[pal][color] ) : palette[0][backCol] };
   
 endmodule
 

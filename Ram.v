@@ -16,6 +16,11 @@ module Ram(clk, reset, writeEnabled, address, dataIn, dataOut);
   initial begin
     integer i, j, k;
     
+    for(i = 0; i < 256; i++) begin
+      for(j = 0; j < 256; j++) begin
+        memory[{j[7:0],i[7:0]}] = i[7:0];
+      end
+    end
     
     memory[0] = 8'h00;
     memory[1] = { /* flip h */ 1'b0, /* flip v */ 1'b0, 4'b0000, /* palette id */ 2'b00 }; 
