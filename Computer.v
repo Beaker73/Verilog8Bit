@@ -18,13 +18,12 @@ module top(clk, reset, hsync, vsync, rgb);
     .hSync(hsync), .vSync(vsync), .rgb(rgb8)
   );
   
+  wire [7:0] r = { rgb8[7:5], rgb8[7:5], rgb8[7:6] };
+  wire [7:0] g = { rgb8[4:2], rgb8[4:2], rgb8[4:3] };
+  wire [7:0] b = { rgb8[1:0], rgb8[1:0], rgb8[1:0], rgb8[1:0] };
+  
   // convert internal rgb to external rgb
-  assign rgb = {
-    8'hff, 
-    rgb8[1:0], rgb8[1:0], rgb8[1:0], rgb8[1:0], // b
-    rgb8[4:2], rgb8[4:2], rgb8[4:3], // g
-    rgb8[7:5], rgb8[7:5], rgb8[7:6]  // r
-  };
+  assign rgb = { 8'hff, b, g, r };
   
 endmodule
 

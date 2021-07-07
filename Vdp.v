@@ -26,24 +26,25 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   );
   
   // init default palette
-  reg [7:0] palette[16];
+  reg [7:0] palette[4][16];
   always @(posedge reset) begin
-    palette[00] <= 8'b000_000_00; // 000000
-    palette[01] <= 8'b001_001_01; // 1D2B53
-    palette[02] <= 8'b011_001_01; // 7E2553
-    palette[03] <= 8'b000_100_01; // 008751
-    palette[04] <= 8'b101_010_00; // AB5236
-    palette[05] <= 8'b011_011_01; // 5F574F
-    palette[06] <= 8'b110_110_11; // C2C3C7
-    palette[07] <= 8'b111_111_11; // FFF1E8
-    palette[08] <= 8'b111_000_01; // FF004D
-    palette[09] <= 8'b111_101_00; // FFA300
-    palette[10] <= 8'b111_111_00; // FFEC27
-    palette[11] <= 8'b000_111_01; // 00E436
-    palette[12] <= 8'b001_101_11; // 29ADFF
-    palette[13] <= 8'b100_011_10; // 83769C
-    palette[14] <= 8'b111_011_10; // FF77A8
-    palette[15] <= 8'b111_110_10; // FFCCAA
+    // pico 8
+    palette[0][00] <= 8'b000_000_00; // 000000
+    palette[0][01] <= 8'b001_001_01; // 1D2B53
+    palette[0][02] <= 8'b011_001_01; // 7E2553
+    palette[0][03] <= 8'b000_100_01; // 008751
+    palette[0][04] <= 8'b101_010_00; // AB5236
+    palette[0][05] <= 8'b011_011_01; // 5F574F
+    palette[0][06] <= 8'b110_110_11; // C2C3C7
+    palette[0][07] <= 8'b111_111_11; // FFF1E8
+    palette[0][08] <= 8'b111_000_01; // FF004D
+    palette[0][09] <= 8'b111_101_00; // FFA300
+    palette[0][10] <= 8'b111_111_00; // FFEC27
+    palette[0][11] <= 8'b000_111_01; // 00E436
+    palette[0][12] <= 8'b001_101_11; // 29ADFF
+    palette[0][13] <= 8'b100_011_10; // 83769C
+    palette[0][14] <= 8'b111_011_10; // FF77A8
+    palette[0][15] <= 8'b111_110_10; // FFCCAA
   end
   
   // vdp registers
@@ -89,12 +90,15 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   
   wire [3:0] color = backCol;
   reg [7:0] pixel;
+  reg [1:0] pal = 2'd0; // the active palette index
   
   always @(posedge clk) begin
     
     // screen mode 0, is a virtual screenmode where everything is off
-    if(scrMode == 0)
+    if(scrMode == 0) begin
       pixel <= { backCol, backCol };
+      pal <= 0;
+    end
     
     // screen mode 1, is a direct pixel map from memory onto screen
     // every byte contains 2 pixels
@@ -104,37 +108,41 @@ module Vdp(clk, reset, hSync, vSync, rgb);
       if(active[0] && x[0] == 1)
         address <= { 1'b0, y[7:0], x[7:1]};
       if(active[1])
-          pixel <= ramDataRead;
+      begin
+        pixel <= ramDataRead;
+        pal <= 0;
+      end
     end
     
     // screen mode 2, is a charachter map of 32x24 characters
-    // char map @ 0000-02ff (32 x 24 bytes) 768 bytes
-    // attr map @ 0400-04ff 256 bytes  (7 fliph 6 flipv 1-0 palette id)
+    // char map @ 0000-05ff ((char, attr) x 32 x 24 bytes) 1536 bytes
     // palt map @ 0600-063f (4 x 16 x rrrgggbb) = 64 bytes
     // pixl map @ 2000-3fff (4 x 8 x 256 bytes) 8192 bytes
     else if(scrMode == 2)
     begin
       reg [7:0] charBuf, char, attrBuf, attr;
-      // -----------------
-      // 6    		d0	p0
-      // 7    a1		p1
-      // 8 0  ca	d1	p2
-      // 9 1  a2	cd	p3
-      // a 2  aa	d2	p4
-      // b 3  a3	ad	p5
-      // c 4    	d3	p6
-      // d 5  a0		p7
-      // -----------------
+      
+      /** screen 2 pipeline
+      
+      scr pixel                   | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 |
+      	                          |                 |                 |
+      set addr        c   a     0 |   2 c 4 a 6   0 |   2 c 4 a 6   0 |
+      read data         c   a     | 0   2 c 4 a 6   | 0   2 c 4 a 6   |
+      copy buff               x   |               x |               x |
+                                  |                 |                 |
+      sync clock      0 1 2 3 4 5 | 6 7 0 1 2 3 4 5 | 6 7
+      
+      **/
       
       // get char (address even, data odd)
       if(active[0] && x[2:0] == 0)
-        address <= { 6'b000000, y[7:3], x[7:3]};
+        address <= { 5'b00000, y[7:3], x[7:3], 1'b0};
       if(active[1] && x[2:0] == 1)
         charBuf <= ramDataRead;
       
       // get attributes every char (address even, data odd)
       if(active[2] && x[2:0] == 2) begin
-        address <= { 8'b00000100, charBuf};
+        address <= { 5'b00000, y[7:3], x[7:3], 1'b1};
       end
       if(active[3] && x[2:0] == 3)
         attrBuf <= ramDataRead;
@@ -157,17 +165,14 @@ module Vdp(clk, reset, hSync, vSync, rgb);
       begin
         // the byte contains 2 nibbles, if h flip is set, those must be swapped
         pixel <= attr[7] ? { ramDataRead[3:0], ramDataRead[7:4] } : ramDataRead;
+        pal <= attr[1:0];
       end
     end
     
   end
-
   
-  assign color = active[7]
-    ? x[0] == delay[0] ? pixel[7:4] : pixel[3:0]
-    : backCol;
-  
-  assign rgb = palette[color];
+  assign color = x[0] == delay[0] ? pixel[7:4] : pixel[3:0];
+  assign rgb = { active[delay] ? palette[pal][color] : palette[0][backCol] };
   
 endmodule
 
