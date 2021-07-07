@@ -21,6 +21,8 @@ module Ram(clk, reset, writeEnabled, address, dataIn, dataOut);
     memory[1] = 8'h01;
     memory[31] = 8'h02;
     memory[32] = 8'h03;
+    
+    memory[1024] = 8'b11000000; // flip v
 
     memory[8192+00] = 8'h08;
     memory[8192+01] = 8'h80;

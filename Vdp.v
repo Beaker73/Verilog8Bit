@@ -71,12 +71,13 @@ module Vdp(clk, reset, hSync, vSync, rgb);
     active <= { active[6:0], isActive };
   wire [8:0]x = xPos-1;
   wire [8:0]y = yPos;
+  wire [8:0]x6 = xPos-6;
   
   // delayed active signal based on screen mode
   wire [2:0]delay =
   	scrMode == 0 ? 0
      :	scrMode == 1 ? 2
-     :  scrMode == 2 ? 3
+     :  scrMode == 2 ? 7
      :  0;
   
   SyncGenerator sync(
@@ -107,49 +108,62 @@ module Vdp(clk, reset, hSync, vSync, rgb);
     end
     
     // screen mode 2, is a charachter map of 32x24 characters
-    // char map @ 0000-02ff (32x24 bytes) 768 bytes
-    // attr map @ 0400-04ff 255 bytes  (7 fliph 6 flipv 1-0 palette id)
-    // palt map @ 0600-063f (rrrgggbb * 16 * 4) = 64 bytes
-    // pixl map @ 2000-3fff (4*8*256 bytes) 8192 bytes
+    // char map @ 0000-02ff (32 x 24 bytes) 768 bytes
+    // attr map @ 0400-04ff 256 bytes  (7 fliph 6 flipv 1-0 palette id)
+    // palt map @ 0600-063f (4 x 16 x rrrgggbb) = 64 bytes
+    // pixl map @ 2000-3fff (4 x 8 x 256 bytes) 8192 bytes
     else if(scrMode == 2)
     begin
-      reg [7:0] char;
-      //   aa
-      //        ad
-      // 0 ca
-      // 1 a0	cd
+      reg [7:0] charBuf, char, attrBuf, attr;
       // -----------------
-      // 2 	d0	p0
-      // 3 a1		p1
-      // 4	d1	p2
-      // 5 a2		p3
-      // 6 aa	d2	p4
-      // 7 a3	ad	p5
-      // 8 ca	d3	p6
-      // 9 a0	cd	p7
+      // 6    		d0	p0
+      // 7    a1		p1
+      // 8 0  ca	d1	p2
+      // 9 1  a2	cd	p3
+      // a 2  aa	d2	p4
+      // b 3  a3	ad	p5
+      // c 4    	d3	p6
+      // d 5  a0		p7
       // -----------------
-      // a      d0	p0
-      // b a1           p1
+      
+      // get char (address even, data odd)
       if(active[0] && x[2:0] == 0)
-        address <= { 6'b0, y[7:3], x[7:3]};
+        address <= { 6'b000000, y[7:3], x[7:3]};
       if(active[1] && x[2:0] == 1)
-      begin
-        char <= ramDataRead;
-        // char will not be available until next clock
-        // so write address using ramdataread for this first one
-        address <= { 3'b001, ramDataRead, y[2:0], x[2:1] };
+        charBuf <= ramDataRead;
+      
+      // get attributes every char (address even, data odd)
+      if(active[2] && x[2:0] == 2) begin
+        address <= { 8'b00000100, charBuf};
       end
-      if(active[1] && x[0] == 1 && x[2:0] != 1)
-        address <= { 3'b001, char, y[2:0], x[2:1] };
-      if(active[2] && x[0] == 0)
-        pixel <= ramDataRead;
-
+      if(active[3] && x[2:0] == 3)
+        attrBuf <= ramDataRead;
+      
+      // activate buffered data
+      if(active[4] && x[2:0] == 4)
+      begin
+        char <= charBuf;
+        attr <= attrBuf;
+      end
+      
+      // get pixel every nibble (address odd, data even)
+      if(active[5] && x[0] == 1) begin
+        // the address of the pixel to retrieve depends on the flip bits
+        address <= { 3'b001, char, 
+                    attr[6] ? ~y[2:0] : y[2:0], 
+                    attr[7] ? ~x6[2:1] : x6[2:1] };
+      end
+      if(active[6] && x[0] == 0)
+      begin
+        // the byte contains 2 nibbles, if h flip is set, those must be swapped
+        pixel <= attr[7] ? { ramDataRead[3:0], ramDataRead[7:4] } : ramDataRead;
+      end
     end
     
   end
 
   
-  assign color = active[delay]
+  assign color = active[7]
     ? x[0] == delay[0] ? pixel[7:4] : pixel[3:0]
     : backCol;
   

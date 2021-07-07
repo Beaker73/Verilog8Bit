@@ -17,7 +17,8 @@ module top(clk, reset, hsync, vsync, rgb);
     .clk(clk), .reset(reset),
     .hSync(hsync), .vSync(vsync), .rgb(rgb8)
   );
-
+  
+  // convert internal rgb to external rgb
   assign rgb = {
     8'hff, 
     rgb8[1:0], rgb8[1:0], rgb8[1:0], rgb8[1:0], // b
