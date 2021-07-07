@@ -15,44 +15,44 @@ module Ram(clk, reset, writeEnabled, address, dataIn, dataOut);
   
   initial begin
     integer i;
-    memory[0] = 8'b00000000;
-    memory[1] = 8'b00000000;
-    memory[31] = 8'b00000000;
-    memory[32] = 8'b00000000;
+    memory[0] = 8'h00;
+    memory[1] = 8'h01;
+    memory[31] = 8'h02;
+    memory[32] = 8'h03;
 
-    memory[8192+00] = 8'h01;
-    memory[8192+01] = 8'h10;
-    memory[8192+02] = 8'h01;
-    memory[8192+03] = 8'h10;
+    memory[8192+00] = 8'h08;
+    memory[8192+01] = 8'h80;
+    memory[8192+02] = 8'h08;
+    memory[8192+03] = 8'h80;
 
     memory[8192+04] = 8'h77;
-    memory[8192+05] = 8'h11;
-    memory[8192+06] = 8'h11;
-    memory[8192+07] = 8'h11;
+    memory[8192+05] = 8'h88;
+    memory[8192+06] = 8'h88;
+    memory[8192+07] = 8'h88;
 
-    memory[8192+08] = 8'h71;
-    memory[8192+09] = 8'h11;
-    memory[8192+10] = 8'h11;
-    memory[8192+11] = 8'h11;
+    memory[8192+08] = 8'h78;
+    memory[8192+09] = 8'h88;
+    memory[8192+10] = 8'h88;
+    memory[8192+11] = 8'h88;
 
-    memory[8192+12] = 8'h91;
-    memory[8192+13] = 8'h11;
-    memory[8192+14] = 8'h11;
-    memory[8192+15] = 8'h11;
+    memory[8192+12] = 8'he8;
+    memory[8192+13] = 8'h88;
+    memory[8192+14] = 8'h88;
+    memory[8192+15] = 8'h88;
 
-    memory[8192+16] = 8'h09;
-    memory[8192+17] = 8'h11;
-    memory[8192+18] = 8'h11;
-    memory[8192+19] = 8'h10;
+    memory[8192+16] = 8'h0e;
+    memory[8192+17] = 8'h88;
+    memory[8192+18] = 8'h88;
+    memory[8192+19] = 8'h80;
 
     memory[8192+20] = 8'h00;
-    memory[8192+21] = 8'h11;
-    memory[8192+22] = 8'h11;
+    memory[8192+21] = 8'h88;
+    memory[8192+22] = 8'h88;
     memory[8192+23] = 8'h00;
 
     memory[8192+24] = 8'h00;
-    memory[8192+25] = 8'h01;
-    memory[8192+26] = 8'h10;
+    memory[8192+25] = 8'h08;
+    memory[8192+26] = 8'h80;
     memory[8192+27] = 8'h00;
 
     memory[8192+28] = 8'h00;
