@@ -14,7 +14,9 @@ module Ram(clk, reset, writeEnabled, address, dataIn, dataOut);
   reg [7:0] memory [0:(1 << Bits)-1];
   
   initial begin
-    integer i;
+    integer i, j;
+    
+    
     memory[0] = 8'h00;
     memory[1] = 8'h01;
     memory[31] = 8'h02;
@@ -59,6 +61,13 @@ module Ram(clk, reset, writeEnabled, address, dataIn, dataOut);
     memory[8192+29] = 8'h00;
     memory[8192+30] = 8'h00;
     memory[8192+31] = 8'h00;
+    
+    for(i = 0; i < 16; i++) begin
+      memory[i+1] = i[7:0] + 1;
+      for(j = 0; j < 32; j++) begin
+        memory[8192+32+i*32+j] = { i[3:0], i[3:0] };
+      end
+    end
 
 end
   
