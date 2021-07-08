@@ -51,7 +51,7 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   reg [7:0] regs[8];
   
   always @(posedge reset) begin
-    regs[0] <= {4'b0000, 4'h3}; // 7-4: border colour 3-0: screen mode
+    regs[0] <= {4'h1, 4'h4}; // 7-4: border colour 3-0: screen mode
     regs[1] <= 8'b0;
     regs[2] <= 8'b0;
     regs[3] <= 8'b0;
@@ -80,6 +80,7 @@ module Vdp(clk, reset, hSync, vSync, rgb);
      :	scrMode == 1 ? 2
      :  scrMode == 2 ? 7
      :	scrMode == 3 ? 2
+     :  scrMode == 4 ? 6
      :  0;
   
   SyncGenerator sync(
@@ -180,10 +181,77 @@ module Vdp(clk, reset, hSync, vSync, rgb);
         trgb <= ramDataRead;
     end
     
+    // screen mode 4, is a text only screen where chars are 6x8
+    // allowing for 40x24 instead of 32x24
+    // char map @ 0000-07df ((char, colour) x 42 x 24 bytes) 2016 bytes
+    // pixl map @ 2000-3fff (1 x 8 x 256 bytes) 2048 bytes
+    else if(scrMode == 4) begin
+      
+      reg [7:0] char, clrBuf, clr, pattern;
+      reg [2:0] mod;
+      reg [5:0] mx;
+      reg [4:0] my;
+      
+      /** screen 4 pipeline
+      
+      scr pixel                   | 0 1 2 3 4 5 | 0 1 2 3 4 5 |
+      	                          |             |             |
+      set addr        c   a   p   | c   a   p   | c   a   p   |
+      read data         c   a   p |   c   a   p |   c   a   p |
+      copy buff                 x |           x |           x |
+                                  |             |             |
+      sync clock      0 1 2 3 4 5 | 6 7 0 1 2 3 | 6 7
+      
+      **/
+      
+      // initialize
+      if(isActive && xPos == 0) begin
+        mod <= 0;
+        mx <= 0;
+        if(yPos == 0)
+       	  my <= 0;
+      end
+      
+      // tick
+      if(active != 0) begin
+        mod <= mod == 5 ? 0 : mod + 1;
+        mx <= mod == 5 ? mx + 1 : mx;
+        my <= mod == 5 && mx == 41 && yPos[2:0] == 7 ? my + 1 : my;
+      end
+        
+      // get char (address even, data odd)
+      if(active[0] && mod == 0)
+        address <= { 4'b0000, my, mx, 1'b0}; // 42*2*23+0
+      if(active[1] && mod == 1)
+        char <= ramDataRead;
+      
+      // get colors (address even, data odd)
+      if(active[2] && mod == 2)
+        address <= { 4'b0000, my, mx, 1'b1};
+      if(active[3] && mod == 3)
+        clrBuf <= ramDataRead;
+      
+      // activate buffered data and get pattern to output
+      if(active[4] && mod == 4)
+        address <= { 5'b00100, char, y[2:0] };
+      if(active[5] && mod == 5)
+      begin
+        clr <= clrBuf;
+        pattern <= ramDataRead;
+      end
+      
+      // output 1 bit of pattern every tick
+      if(active[6])
+        if(xPos >= 260) // 252 + 6
+          trgb <= palette[0][backCol];
+        else
+          trgb <= palette[0][ pattern[7-mod] ? clr[3:0] : clr[7:4]];
+    end
+    
   end
   
   assign color = x[0] == delay[0] ? pixel[7:4] : pixel[3:0];
-  assign rgb = { active[delay] ? ( scrMode == 3 ? trgb : palette[pal][color] ) : palette[0][backCol] };
+  assign rgb = { active[delay] ? ( scrMode == 3 || scrMode == 4 ? trgb : palette[pal][color] ) : palette[0][backCol] };
   
 endmodule
 
