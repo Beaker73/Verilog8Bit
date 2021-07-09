@@ -77,7 +77,7 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   // delayed active signal based on screen mode
   wire [2:0]delay =
   	scrMode == 0 ? 0
-     :	scrMode == 1 ? 2
+     :	scrMode == 1 ? 3
      :  scrMode == 2 ? 7
      :	scrMode == 3 ? 2
      :  scrMode == 4 ? 6
@@ -250,7 +250,7 @@ module Vdp(clk, reset, hSync, vSync, rgb);
     
   end
   
-  assign color = x[0] == delay[0] ? pixel[7:4] : pixel[3:0];
+  assign color = x[0] == delay[1] ? pixel[7:4] : pixel[3:0];
   assign rgb = { active[delay] ? ( scrMode == 3 || scrMode == 4 ? trgb : palette[pal][color] ) : palette[0][backCol] };
   
 endmodule

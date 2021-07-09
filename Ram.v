@@ -22,6 +22,51 @@ module Ram(clk, reset, writeEnabled, address, dataIn, dataOut);
       end
     end
     
+    memory[384+00] = 8'h00;
+    memory[384+01] = 8'h00;
+    memory[384+02] = 8'h00;
+    memory[384+03] = 8'h00;
+    
+    memory[512+00] = 8'h0e;
+    memory[512+01] = 8'h80;
+    memory[512+02] = 8'h88;
+    memory[512+03] = 8'h00;
+
+    memory[640+00] = 8'he6;
+    memory[640+01] = 8'h78;
+    memory[640+02] = 8'h88;
+    memory[640+03] = 8'h80;
+
+    memory[768+00] = 8'he7;
+    memory[768+01] = 8'h88;
+    memory[768+02] = 8'h88;
+    memory[768+03] = 8'h80;
+
+    memory[896+00] = 8'h8e;
+    memory[896+01] = 8'h88;
+    memory[896+02] = 8'h88;
+    memory[896+03] = 8'h80;
+
+    memory[1024+00] = 8'h08;
+    memory[1024+01] = 8'he8;
+    memory[1024+02] = 8'h88;
+    memory[1024+03] = 8'h00;
+
+    memory[1152+00] = 8'h00;
+    memory[1152+01] = 8'h88;
+    memory[1152+02] = 8'h80;
+    memory[1152+03] = 8'h00;
+
+    memory[1280+00] = 8'h00;
+    memory[1280+01] = 8'h08;
+    memory[1280+02] = 8'h00;
+    memory[1280+03] = 8'h00;
+
+    memory[1408+00] = 8'h00;
+    memory[1408+01] = 8'h00;
+    memory[1408+02] = 8'h00;
+    memory[1408+03] = 8'h00;
+    
     memory[0] = 8'h00;
     memory[1] = { /* flip h */ 1'b0, /* flip v */ 1'b0, 4'b0000, /* palette id */ 2'b00 }; 
     memory[2] = 8'h00;
