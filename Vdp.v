@@ -1,5 +1,5 @@
-`ifndef VDP_H
-`define VDP_H
+`ifndef VDP_V
+`define VDP_V
 
 `include "Ram.v"
 `include "Vdp.v"

@@ -1,5 +1,7 @@
-`ifndef ROM_H
-`define ROM_H
+`ifndef ROM_V
+`define ROM_V
+
+
 
 module Rom(clk, reset, chipSelect, address, data);
 
@@ -16,6 +18,7 @@ module Rom(clk, reset, chipSelect, address, data);
   assign data = chipSelect ? romData[address] : 8'bz;
 
   // inline assembly
+
   // directly compiled into ROM
 `ifdef EXT_INLINE_ASM
   initial begin
@@ -26,7 +29,7 @@ module Rom(clk, reset, chipSelect, address, data);
 .org	0
 .len	16384
 
-Boot:	nop
+Boot:	di
       	nop
         halt
 

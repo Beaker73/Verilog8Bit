@@ -1,5 +1,5 @@
-`ifndef SYNCGENERATOR_H
-`define SYNCGENERATOR_H
+`ifndef SYNCGENERATOR_V
+`define SYNCGENERATOR_V
 
 `include "Ram.v"
 
