@@ -2,11 +2,15 @@
 `define COMPUTER_V
 
 `include "Rom.v"
-
 `include "Ram.v"
 `include "Cpu.v"
+`include "CpuAlu.z"
 `include "Vdp.v"
 `include "SyncGenerator.v";
+
+`ifdef BANAAN
+`include "Beaker8.json";
+`endif
 
 module top(clk, reset, hsync, vsync, rgb);
 
@@ -23,7 +27,7 @@ module top(clk, reset, hsync, vsync, rgb);
 
   wire [7:0] dataIn, dataOut;
   wire [15:0] address;
-  
+
   Ram ram(
     .clk(clk), .reset(reset),
     .writeEnabled(0),
