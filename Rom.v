@@ -66,7 +66,15 @@ _loop:
         send vramWrite
         djr.w.nz _loop
         ret 
+      
+        little Init ; // using var with little endianess config generates 0000
+        big    Init ; // using var with big endianess config generates 0400
+        auto   Init ; // using var without endianess config generates 0400
 
+        little $0020; // using var with endianess config. generates 2000
+        big    $0020; // using var with big config. generates 0020
+        auto   $0020; // using var without endianess config. generates 0020
+      
       __endasm
     };
 `endif

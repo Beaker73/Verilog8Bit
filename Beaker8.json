@@ -8,6 +8,8 @@
     "ic": { "bits": 3 },
     "abs8": { "bits": 8 },
     "abs16": { "bits": 16 },
+    "little16": { "bits": 16, "endian": "little" },
+    "big16": { "bits": 16, "endian": "big" },
     "rel8": { "bits": 8, "iprel": true, "ipofs": 2 }
   },
   "rules": [
@@ -73,9 +75,9 @@
     { "fmt": "di",                     "bits": ["11100100"] },
     { "fmt": "ei",                     "bits": ["11100101"] },
     { "fmt": "jump",                   "bits": ["11101000"] },
-    { "fmt": "jump ~abs16",            "bits": ["11101001", 0] },
+    { "fmt": "jump ~big16",            "bits": ["11101001", 0] },
     { "fmt": "call",                   "bits": ["11101010"] },
-    { "fmt": "call ~abs16",            "bits": ["11101011", 0] },
+    { "fmt": "call ~big16",            "bits": ["11101011", 0] },
     { "fmt": "read.pc",		       "bits": ["11101100"] },
     { "fmt": "djr.nz ~abs8",	       "bits": ["11101110"] },
     { "fmt": "djr.b.nz ~abs8",	       "bits": ["11101110"] },
@@ -83,6 +85,10 @@
     { "fmt": "jr", 	               "bits": ["11110000"] },
     { "fmt": "jr~cond", 	       "bits": ["11110", 0] },
     { "fmt": "ret", 	               "bits": ["11111000"] },
-    { "fmt": "ret~cond", 	       "bits": ["11111", 0] }
+    { "fmt": "ret~cond", 	       "bits": ["11111", 0] },
+    
+    { "fmt": "little ~little16",       "bits": ["11111111", 0]},
+    { "fmt": "auto ~abs16",           "bits": ["11111111", 0]},
+    { "fmt": "big ~big16",             "bits": ["11111111", 0]}
   ]
 }
