@@ -51,7 +51,7 @@ module Vdp(clk, reset, hSync, vSync, rgb);
   reg [7:0] regs[8];
   
   always @(posedge reset) begin
-    regs[0] <= {4'h1, 4'h4}; // 7-4: border colour 3-0: screen mode
+    regs[0] <= {4'h1, 4'h2}; // 7-4: border colour 3-0: screen mode
     regs[1] <= 8'b0;
     regs[2] <= 8'b0;
     regs[3] <= 8'b0;
