@@ -7,11 +7,13 @@
     "cond": { "bits": 3, "toks": ["♦", "♦", ".z", ".nz", ".c", ".nc", ".s", ".ns"] },
     "ic": { "bits": 3 },
     "abs8": { "bits": 8 },
-    "abs16": { "bits": 16 },
+    "abs16": { "bits": 16, "endian": "little" },
+    "rel8": { "bits": 8, "iprel": true, "ipofs": 2 },
+
     "little16": { "bits": 16, "endian": "little" },
     "big16": { "bits": 16, "endian": "big" },
-    "rel8": { "bits": 8, "iprel": true, "ipofs": 2 }
-  },
+    "auto16": { "bits": 16 }
+},
   "rules": [
     { "fmt": "const.~cb",              "bits": ["00000", 0] },
     { "fmt": "const.b.~cb",            "bits": ["00000", 0] },
@@ -88,7 +90,7 @@
     { "fmt": "ret~cond", 	       "bits": ["11111", 0] },
     
     { "fmt": "little ~little16",       "bits": ["11111111", 0]},
-    { "fmt": "auto ~abs16",           "bits": ["11111111", 0]},
+    { "fmt": "auto ~auto16",           "bits": ["11111111", 0]},
     { "fmt": "big ~big16",             "bits": ["11111111", 0]}
   ]
 }

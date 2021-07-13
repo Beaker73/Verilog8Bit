@@ -67,13 +67,13 @@ _loop:
         djr.w.nz _loop
         ret 
       
-        little Init ; // using var with little endianess config generates 0000
-        big    Init ; // using var with big endianess config generates 0400
-        auto   Init ; // using var without endianess config generates 0400
+        little Init ; // using var with little endianess config generates 0400 OK
+        big    Init ; // using var with big endianess config generates 0004 OK
+        auto   Init ; // using var without endianess config. expect ? generates 0400 LITTLE
 
-        little $0020; // using var with endianess config. generates 2000
-        big    $0020; // using var with big config. generates 0020
-        auto   $0020; // using var without endianess config. generates 0020
+        little $0020; // using var with endianess config. expect 2000, generates 2000 OK
+        big    $0020; // using var with big config. expect 0020, generates 0020 OK
+        auto   $0020; // using var without endianess config. expect ? generates 0020 BIG
       
       __endasm
     };
