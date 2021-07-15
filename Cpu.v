@@ -45,6 +45,14 @@ module Cpu(
       sp <= 0;
       io <= 0;
       interrupt <= 0;
+      data[0] <= 64'0;
+      data[1] <= 64'0;
+      data[2] <= 64'0;
+      data[3] <= 64'0;
+      data[4] <= 64'0;
+      data[5] <= 64'0;
+      data[6] <= 64'0;
+      data[7] <= 64'0;
     end
   end
  
@@ -54,64 +62,58 @@ module Cpu(
     .resultOut(aluResult), .flagsOut(aluFlagsOut)
   );
   
-  // 15:0  16 bits / 2 bytes    address of command
-  // 39:16 24 bits / 3 bytes    command
-  // 41:40  2 bits              command length (1, 2 or 3)
-  // 57:42 16 bits / 2 bytes    data read address
+  // 15:0     16 bits / 2 bytes    address of command
+  // 23:16    8  bits / 1 byte     instruction
+  
+  // 61:58	     		   step: 0000-requested instr, 0001-instruction
+  // 62				   MUST read data
+  // 63                            is valid
 
   wire [63:0] data[15];
+  wire mustReadInstruction = data[0][62] == 1 && data[0][61:58] == 4'b0000; // must read && requested instruction
+  wire canRequestInstruction = 1;
   
   always @(posedge clk) begin
     if(!reset) begin
       
-      // STAGE 0 - Output address of instruction to fetch
-      if(data[1][41:40] < 2 && data[2][41:40] < 3) begin
-        data[0][15:0] <= pc;
-        address <= pc;
-        io <= IO_READ;
+      // STEP 0 - Request Next Instruction
+      if(canRequestInstruction) begin
+        address <= pc; 			// request instruction
+        io <= IO_WRITE;
+        data[0][63:58] <= 6'b110000;	// valid: true, must read, content: 00 requested instruction, 
+        data[0][15:0] <= pc;		// store sp of instruction in pipeline
         pc <= pc + 1;
       end
       
-      // STAGE 1 - Read the instruction
-      data[1] <= data[0];
-      data[1][23:16] <= dataIn;
-      case(dataIn)
-        OP_CALL_ADDR: begin 
-          data[1][41:40] <= 2'd3;
-          data[1][57:42] <= data[0][15:0]+1;
-        end
-        default: data[1][41:40] <= 2'd1;
-      endcase
+      // STEP 1 - Must Read Next Instruction
+      if(mustReadInstruction) begin
         
-      // STAGE 2 - Read byte 1 for instruction
-      data[2] <= data[1];
-      if(data[1][41:40] > 1 ) begin
-        address <= data[1][57:42];
-        io <= IO_READ;
-        data[2][57:42] <= data[1][57:42];
+        case(dataIn)
+          // the 1 byte instructions can now be executed
+          'he0: begin // NOP
+            data[1] <= 64'0;     // no more steps
+          end
+          'he1: begin // HALT
+            pc <= data[0][15:0]; // get pc of this instruction and set PC to it
+            data[0][63] <= 0;    // invalidate already read data, we are branching
+            data[1] <= 64'0;     // no more steps
+          end
+          
+          // multi byte instruction, needs more from PC
+          'he9: begin
+            data[1] <= { data[0][63:62], 4'b0001, 34'd0, dataIn, data[0][15:0] };
+          end
+            
+          // not implemented, handle as NOP
+          default: begin
+            data[1] <= 63'0;
+          end
+            
+        endcase
       end
       
-      // STAGE 3 - Read byte 2 for instruction
-      data[3] <= data[2];
-      if(data[2][41:40] > 2 ) begin
-        data[3][31:24] <= dataIn;
-        address <= data[2][57:42];
-        io <= IO_READ;
-      end
-      
-      // STAGE 4 - Execute the instruction
-      data[4] <= data[3];
-      case(data[3][23:16])
-        OP_CALL_ADDR: begin
-          pc <= data[3][39:24];
-        end
-        
-        default:;
-      endcase
-
     end
   end
-  
   
   assign read = io[0];
   assign write = io[1];
@@ -171,8 +173,8 @@ module TestRom(clk, reset, chipSelect, address, data);
 
         nop
         nop
-boot:   nop
-        nop
+boot:   halt
+        const.2
         nop
         nop
         nop
