@@ -1,12 +1,12 @@
-`ifndef COMPUTER_SV
-`define COMPUTER_SV
+`ifndef COMPUTER_V
+`define COMPUTER_V
 
-`include "Rom.sv"
-`include "Ram.sv"
-`include "Cpu.sv"
-`include "CpuAlu.sv"
-`include "Vdp.sv"
-`include "SyncGenerator.sv";
+`include "Rom.v"
+`include "Ram.v"
+`include "Cpu.v"
+`include "CpuAlu.v"
+`include "Vdp.v"
+`include "SyncGenerator.v";
 
 `ifdef BANAAN
 `include "Beaker8.json";

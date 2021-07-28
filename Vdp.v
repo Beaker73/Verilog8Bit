@@ -1,9 +1,9 @@
-`ifndef VDP_SV
-`define VDP_SV
+`ifndef VDP_V
+`define VDP_V
 
-`include "Ram.sv"
-`include "Vdp.sv"
-`include "SyncGenerator.sv";
+`include "Ram.v"
+`include "Vdp.v"
+`include "SyncGenerator.v";
 
 module Vdp(clk, reset, hSync, vSync, rgb);
 

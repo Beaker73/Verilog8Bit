@@ -1,7 +1,7 @@
 `ifndef CPU_V
 `define CPU_V
 
-`include "CpuAlu.sv"
+`include "CpuAlu.v"
 
 parameter OP_NOP       = 8'b11100000;
 parameter OP_HALT      = 8'b11100001;
