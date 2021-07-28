@@ -1,7 +1,7 @@
-`ifndef SYNCGENERATOR_V
-`define SYNCGENERATOR_V
+`ifndef SYNCGENERATOR_SV
+`define SYNCGENERATOR_SV
 
-`include "Ram.v"
+`include "Ram.sv"
 
 module SyncGenerator(clk, reset, hShift, vShift, hSync, vSync, xPos, yPos, isActive);
  

@@ -1,5 +1,5 @@
-`ifndef RAM_V
-`define RAM_V
+`ifndef RAM_SV
+`define RAM_SV
 
 module Ram(clk, reset, writeEnabled, address, dataIn, dataOut);
   

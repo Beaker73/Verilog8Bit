@@ -1,5 +1,5 @@
-`ifndef ROM_V
-`define ROM_V
+`ifndef ROM_SV
+`define ROM_SV
 
 `ifdef BANAAN
 `include "Beaker8.json";
