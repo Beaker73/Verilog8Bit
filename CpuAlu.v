@@ -1,8 +1,6 @@
 `ifndef CPU_ALU_V
 `define CPU_ALU_V
 
-`include "CpuAlu.z"
-
 parameter ALUOP_ADD  = 5'b00000;
 parameter ALUOP_SUB  = 5'b00001;
 parameter ALUOP_MUL  = 5'b00010;

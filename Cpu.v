@@ -3,16 +3,29 @@
 
 `include "CpuAlu.v"
 
-parameter OP_NOP       = 8'b11100000;
-parameter OP_HALT      = 8'b11100001;
-parameter OP_BREAK     = 8'b11100010;
-parameter OP_DI        = 8'b11100100;
-parameter OP_EI        = 8'b11100101;
-parameter OP_JUMP      = 8'b11101000;
-parameter OP_JUMP_ADDR = 8'b11101001;
-parameter OP_CALL      = 8'b11101010;
-parameter OP_CALL_ADDR = 8'b11101011;
-parameter OP_RET       = 8'b11111000;
+typedef enum bit[7:0] {
+  
+  OP_CONST_B_0   = 8'b00000000,
+  OP_CONST_B_1   = 8'b00000001,
+  OP_CONST_B_2   = 8'b00000010,
+  OP_CONST_B_4   = 8'b00000011,
+  OP_CONST_B_8   = 8'b00000100,
+  OP_CONST_B_10  = 8'b00000101,
+  OP_CONST_B_N   = 8'b00000110,
+  OP_CONST_B_255 = 8'b00000111,
+  
+  OP_NOP       = 8'b11100000,
+  OP_HALT      = 8'b11100001,
+  OP_BREAK     = 8'b11100010,
+  OP_DI        = 8'b11100100,
+  OP_EI        = 8'b11100101,
+  OP_JUMP      = 8'b11101000,
+  OP_JUMP_ADDR = 8'b11101001,
+  OP_CALL      = 8'b11101010,
+  OP_CALL_ADDR = 8'b11101011,
+  OP_RET       = 8'b11111000
+} opcode;
+
 
 parameter IO_NONE = 2'b00;
 parameter IO_READ = 2'b10;
@@ -44,14 +57,6 @@ module Cpu(
       sp <= 0;
       io <= 0;
       interrupt <= 0;
-      data[0] <= 64'0;
-      data[1] <= 64'0;
-      data[2] <= 64'0;
-      data[3] <= 64'0;
-      data[4] <= 64'0;
-      data[5] <= 64'0;
-      data[6] <= 64'0;
-      data[7] <= 64'0;
     end
   end
  
@@ -61,63 +66,191 @@ module Cpu(
     .resultOut(aluResult), .flagsOut(aluFlagsOut)
   );
   
-  // 15:0     16 bits / 2 bytes    address of command
-  // 23:16    8  bits / 1 byte     instruction
-  
-  // 61:58	     		   step: 0000-requested instr, 0001-instruction
-  // 62				   MUST read data
-  // 63                            is valid
+  wire [1:0] cmdLength2;
 
-  wire [63:0] data[15];
-  wire mustReadInstruction = data[0][62] == 1 && data[0][61:58] == 4'b0000; // must read && requested instruction
-  wire canRequestInstruction = 1;
   
-  always @(posedge clk) begin
-    if(!reset) begin
-      
-      // STEP 0 - Request Next Instruction
-      if(canRequestInstruction) begin
-        address <= pc; 			// request instruction
-        io <= IO_WRITE;
-        data[0][63:58] <= 6'b110000;	// valid: true, must read, content: 00 requested instruction, 
-        data[0][15:0] <= pc;		// store sp of instruction in pipeline
-        pc <= pc + 1;
-      end
-      
-      // STEP 1 - Must Read Next Instruction
-      if(mustReadInstruction) begin
-        
-        case(dataIn)
-          // the 1 byte instructions can now be executed
-          'he0: begin // NOP
-            data[1] <= 64'0;     // no more steps
-          end
-          'he1: begin // HALT
-            pc <= data[0][15:0]; // get pc of this instruction and set PC to it
-            data[0][63] <= 0;    // invalidate already read data, we are branching
-            data[1] <= 64'0;     // no more steps
-          end
-          
-          // multi byte instruction, needs more from PC
-          'he9: begin
-            data[1] <= { data[0][63:62], 4'b0001, 34'd0, dataIn, data[0][15:0] };
-          end
-            
-          // not implemented, handle as NOP
-          default: begin
-            data[1] <= 63'0;
-          end
-            
-        endcase
-      end
-      
+  // step 0 - request instruction - clock tick 0
+  wire dataRequested0;
+  wire [15:0] address0;
+  wire valid0;
+  RequestInstruction step0(
+    clk, reset, .enable(cmdLength2[1] == 1) /* feedback from decode step */,  pc, // in
+    valid0, dataRequested0, address0, pc // out
+  );
+  
+  // step 1 - read instruction - clock tick 1
+  wire valid1;
+  wire [7:0] cmd1;
+  wire [15:0] cmdAddress1;
+  ReadInstruction step1(
+    clk, reset, .enable(valid0), address0, dataIn, // in
+    valid1, cmdAddress1, cmd1 // out
+  );
+  
+  // step 2 - decode the instruction - async
+  wire dataOnStack2;
+  wire [15:0] cmdAddress2;
+  DecodeInstructionAsync step2(
+    cmd1, // in
+    cmdLength2, dataOnStack2 // out
+  );
+  
+  // step 3 - get data byte 1 - clock tick 2
+  wire valid3;
+  wire dataRequested3;
+  wire [15:0] address3;
+  RequestDataByte step3(
+    clk, reset, .enable(valid1), cmd1, cmdLength2, dataOnStack2, cmdAddress1,
+    valid3, dataRequested3, address3
+  );
+  
+  
+  always_comb begin
+    
+    if(dataRequested3) // data byte 1 - requested
+    begin
+      io = IO_READ;
+      address = address3;
     end
-  end
+    
+    else if(dataRequested0) // command - requested
+    begin
+      io = IO_READ;
+      address = address0;
+    end
+    
+    else
+    begin
+      io = IO_NONE;
+      address = 16'b0;
+    end
   
+  end
+    
   assign read = io[0];
   assign write = io[1];
   
 endmodule
+
+module RequestInstruction(
+  input clk, reset, enable,
+  input [15:0] pcIn,
+  
+  output valid,
+  output dataRequested,
+  output [15:0] address,
+  output [15:0] pcOut
+);
+
+  always @(posedge clk) begin
+    if(!reset && enable) begin 
+      dataRequested <= 1;
+      address <= pcIn;
+      pcOut <= pcIn + 1;
+      valid <= 1;
+    end
+    else
+      valid <= 0;
+  end
+  
+endmodule;
+
+module ReadInstruction(
+  input clk, reset, enable,
+  input [15:0] cmdAddressIn,
+  input [7:0] dataIn, 
+  
+  output valid,
+  output [15:0] cmdAddressOut, 
+  output [7:0] cmdOut
+);
+  
+  always @(posedge clk) begin
+    if(!reset && enable) begin
+      cmdOut <= dataIn;
+      cmdAddressOut <= cmdAddressIn;
+      valid <= 1;
+    end
+    else
+      valid <= 0;
+  end
+  
+endmodule;
+
+module DecodeInstructionAsync(
+  input [7:0] cmd,
+
+  output [1:0] cmdLength,    // 0: not valid, ignore cmd; 1: 1 byte, 2: 2 bytes, 3: 3 bytes.
+  output dataOnStack         // 0: data behind cmd, 1: data on stack
+);
+  
+  always_comb begin
+    case(cmd)
+      
+      OP_CONST_B_0, OP_CONST_B_1, OP_CONST_B_2, OP_CONST_B_4, OP_CONST_B_8, OP_CONST_B_10, OP_CONST_B_255,
+      OP_NOP: 
+      begin
+        cmdLength = 1;   // 1 command byte
+        dataOnStack = 0; // data not on stack
+      end
+      
+      OP_CONST_B_N: 
+      begin
+        cmdLength = 2;   // 1 command byte + 1 data byte
+        dataOnStack = 0; // data not on stack
+      end
+      
+      OP_JUMP_ADDR:
+      begin
+        cmdLength = 3;	 // 1 command byte + 2 data bytes
+        dataOnStack = 0; // data not on stack
+      end
+      
+      // any other bytes are invalid
+      default: begin
+      	cmdLength = 0;   // 0 signal invalid cmd
+        dataOnStack = 0;
+      end
+      
+    endcase
+  end
+  
+endmodule;
+
+module RequestDataByte(
+  input clk, reset, enable,
+  
+  input [7:0] cmd, 
+  input [1:0] commandLength,
+  input dataOnStack,
+  input [15:0] commandAddress,
+  
+  output valid,
+  output requested, [15:0] address
+);
+  
+  always @(posedge clk) begin
+    if(!reset && enable) begin
+      
+      // if length > 1 (10 or 11), more data should be retrieved
+      if(commandLength[1] == 1) begin
+        address <= commandAddress + 1;
+        requested <= 1;
+      end
+      // otherwise no more data needed
+      else
+        requested <= 0;
+
+      valid <= 1;
+    end
+    else
+      valid <= 0;
+  end
+  
+endmodule;
+
+
+
 
 
 
